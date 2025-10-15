@@ -1,4 +1,4 @@
-﻿namespace COMP2139_ICE.Models;
+﻿namespace COMP2139_ICE.Area.ProjectManagement.Models;
 
 public class Project
 {
@@ -18,5 +18,9 @@ public class Project
     public DateTime EndDate { get; set; }
 
     // The current status of the project.
-    public string Status { get; set; }
+    public string? Status { get; set; }
+    
+    public List<ProjectTask>? Tasks { get; set; } = new();
+    
+
 }
