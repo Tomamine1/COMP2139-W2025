@@ -1,10 +1,10 @@
-﻿using COMP2139_ICE.Area.ProjectManagement.models;
+﻿using COMP2139_ICE.Areas.ProjectManagement.Models;
 using COMP2139_ICE.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace COMP2139_ICE.Area.ProjectManagement.Controller;
+namespace COMP2139_ICE.Areas.ProjectManagement.Controller;
 [Area("ProjectManagement")]
 [Route("[area]/[controller]/[action]")]
 public class ProjectTaskController : Microsoft.AspNetCore.Mvc.Controller
@@ -16,22 +16,22 @@ public class ProjectTaskController : Microsoft.AspNetCore.Mvc.Controller
         _context = context;
     }
 
-    [HttpGet]
-    public IActionResult Index(int projectId)
+    [HttpGet("Index/{projectId:int}")]
+    public async Task<IActionResult> Index(int projectId)
     {
-        var tasks = _context.ProjectTasks
+        var tasks =await _context.ProjectTasks
             .Where(t => t.ProjectId == projectId)
-            .ToList();
+            .ToListAsync();
         ViewBag.ProjectId = projectId;
         return View(tasks);
     }
 
-    [HttpGet]
-    public IActionResult Details(int id)
+    [HttpGet("Details/{id:int}")]
+    public async Task<IActionResult> Details(int id)
     {
-        var task = _context.ProjectTasks
+        var task = await _context.ProjectTasks
             .Include(t => t.Project) // Include related project data 
-            .FirstOrDefault(t => t.ProjectTaskId == id);
+            .FirstOrDefaultAsync(t => t.ProjectTaskId == id);
 
         if (task == null)
         {
@@ -41,10 +41,10 @@ public class ProjectTaskController : Microsoft.AspNetCore.Mvc.Controller
         return View(task);
     }
 
-    [HttpGet]
-    public IActionResult Create(int projectId)
+    [HttpGet("Create/{projectId:int}")]
+    public async Task<IActionResult> Create(int projectId)
     {
-        var project = _context.Projects.Find(projectId);
+        var project = await _context.Projects.FindAsync(projectId);
         if (project == null)
         {
             return NotFound();
@@ -61,40 +61,44 @@ public class ProjectTaskController : Microsoft.AspNetCore.Mvc.Controller
     }
 
 
-    [HttpPost]
+    [HttpPost("Create/{projectId:int}")]
     [ValidateAntiForgeryToken]
-    public IActionResult Create([Bind("Title", "Description", "ProjectId")] ProjectTask task)
+    public async Task<IActionResult> Create([Bind("Title", "Description", "ProjectId")] ProjectTask task)
     {
         if (ModelState.IsValid)
         {
-            _context.ProjectTasks.Add(task);
-            _context.SaveChanges();
+            await _context.ProjectTasks.AddAsync(task);
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index), new { projectId = task.ProjectId });
         }
+        
+        var projects = await _context.Projects.ToListAsync();
 
-        ViewBag.Projects = new SelectList(_context.Projects, "ProjectId", "Name", task.ProjectId);
+        ViewBag.Projects = new SelectList(projects, "ProjectId", "Name", task.ProjectId);
         return View(task);
     }
 
-    [HttpGet]
-    public IActionResult Edit(int id)
+    [HttpGet("Edit/{id:int}")]
+    public async Task<IActionResult> Edit(int id)
     {
-        var task = _context.ProjectTasks
+        var task = await _context.ProjectTasks
             .Include(t => t.Project) // Include related project data 
-            .FirstOrDefault(t => t.ProjectTaskId == id);
+            .FirstOrDefaultAsync(t => t.ProjectTaskId == id);
 
         if (task == null)
         {
             return NotFound();
         }
 
-        ViewBag.Projects = new SelectList(_context.Projects, "ProjectId", "Name", task.ProjectId);
+        var projects = await _context.Projects.ToListAsync();
+        
+        ViewBag.Projects = new SelectList(projects, "ProjectId", "Name", task.ProjectId);
         return View(task);
     }
 
-    [HttpPost]
+    [HttpPost("Edit/{id:int}")]
     [ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, [Bind("ProjectTaskId", "Title", "Description", "ProjectId")] ProjectTask task)
+    public async Task<IActionResult> Edit(int id, [Bind("ProjectTaskId", "Title", "Description", "ProjectId")] ProjectTask task)
 
     {
         if (id != task.ProjectTaskId)
@@ -105,7 +109,7 @@ public class ProjectTaskController : Microsoft.AspNetCore.Mvc.Controller
         if (ModelState.IsValid)
         {
             _context.ProjectTasks.Update(task);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index), new { projectId = task.ProjectId });
         }
 
@@ -113,12 +117,12 @@ public class ProjectTaskController : Microsoft.AspNetCore.Mvc.Controller
         return View(task);
     }
 
-    [HttpGet]
-    public IActionResult Delete(int id)
+    [HttpGet("Delete/{id:int}")]
+    public async Task<IActionResult> Delete(int id)
     {
-        var task = _context.ProjectTasks
+        var task = await _context.ProjectTasks
             .Include(t => t.Project) // Include related project data 
-            .FirstOrDefault(t => t.ProjectTaskId == id);
+            .FirstOrDefaultAsync(t => t.ProjectTaskId == id);
 
         if (task == null)
         {
@@ -129,15 +133,15 @@ public class ProjectTaskController : Microsoft.AspNetCore.Mvc.Controller
     }
 
 
-    [HttpPost, ActionName("DeleteConfirmed")]
+    [HttpPost("DeleteConfirmed/{id:int}")]
     [ValidateAntiForgeryToken]
-    public IActionResult DeleteConfirmed(int projectTaskId)
+    public async Task<IActionResult> DeleteConfirmed(int projectTaskId)
     {
-        var task = _context.ProjectTasks.Find(projectTaskId);
+        var task = await _context.ProjectTasks.FindAsync(projectTaskId);
         if (task != null)
         {
             _context.ProjectTasks.Remove(task);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index), new { projectId = task.ProjectId });
         }
 
